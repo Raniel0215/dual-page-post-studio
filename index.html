@@ -132,45 +132,63 @@ function chooseQuote(page,topic){
 }
 function wrapText(ctx,text,maxWidth){let words=text.split(/\s+/),lines=[],line='';for(const word of words){let test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);return lines}
 function drawBackground(ctx,seed,page,mood){
- const W=1080,H=1080,r=seeded(seed),sc=pickScene(seed%scenes.length);
+ const W=1080,H=1080,r=seeded(seed),sc=pickScene(seed%scenes.length),idx=seed%scenes.length;
  const faith=page==='faith';
- const palettes=faith?[
-  ['#080d20','#263d68','#d6a75f'],['#24150f','#70452e','#e7bd79'],['#101d25','#315b68','#e9d7ad'],['#1a1028','#553d73','#d8b879']
- ]:[
-  ['#111b2a','#39516b','#d9a875'],['#1b2222','#52675e','#d7c4a1'],['#261b24','#76535a','#e1b98c'],['#142432','#3d6471','#edc28d']
- ];
- const pal=palettes[seed%palettes.length];
+ const faithPalettes=[['#071326','#203d66','#d9ad69'],['#21130f','#68432e','#e9c27e'],['#10252d','#38616a','#f0dcb3'],['#1b122b','#554078','#dfbd7c'],['#101b28','#344f68','#d8b477'],['#201a18','#604b3c','#edcc91'],['#0d1727','#263f59','#d6b77d']];
+ const lifePalettes=[['#101a29','#3d566d','#d8a879'],['#1a2424','#526b61','#d8c7a8'],['#2b1c29','#76545d','#e3b98e'],['#142635','#416b79','#f0c891'],['#25202a','#65505b','#d5a27d'],['#18232d','#475b69','#d9c7a7'],['#252b2d','#6c6a5d','#e1c79b']];
+ const pal=(faith?faithPalettes:lifePalettes)[idx];
  let g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,pal[0]);g.addColorStop(.58,pal[1]);g.addColorStop(1,pal[2]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
- // cinematic atmospheric light, haze and fine grain
- let glow=ctx.createRadialGradient(faith?790:770,faith?180:250,8,faith?790:770,faith?180:250,760);glow.addColorStop(0,faith?'rgba(255,222,157,.48)':'rgba(255,210,164,.34)');glow.addColorStop(1,'rgba(255,220,170,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
- for(let i=0;i<170;i++){let x=r()*W,y=r()*H,rad=1+r()*5;ctx.fillStyle=`rgba(255,239,211,${r()*.12})`;ctx.beginPath();ctx.arc(x,y,rad,0,7);ctx.fill()}
+ // Different scenes use different compositions, not just different colours.
+ const glowX=[790,260,760,810,500,820,330][idx],glowY=[190,250,500,380,320,170,280][idx];
+ let glow=ctx.createRadialGradient(glowX,glowY,8,glowX,glowY,650);glow.addColorStop(0,faith?'rgba(255,225,166,.52)':'rgba(255,211,169,.42)');glow.addColorStop(1,'rgba(255,220,170,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
  if(faith){
-  // Sacred architecture: stained-glass arch, warm rays and a prominent cross.
-  ctx.save();ctx.globalAlpha=.24;ctx.strokeStyle='#f6dfb1';ctx.lineWidth=18;ctx.beginPath();ctx.moveTo(170,900);ctx.lineTo(170,390);ctx.quadraticCurveTo(170,120,540,110);ctx.quadraticCurveTo(910,120,910,390);ctx.lineTo(910,900);ctx.stroke();
-  for(let i=0;i<7;i++){ctx.strokeStyle=['#d9a85e','#8eafc0','#c58a77','#e2c98d'][i%4];ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(205+i*110,880);ctx.lineTo(205+i*110,420);ctx.stroke()}ctx.restore();
-  // radiant cross silhouette in upper third, visible but not competing with message
-  ctx.save();ctx.translate(820,235);ctx.shadowColor='rgba(255,218,150,.9)';ctx.shadowBlur=55;ctx.fillStyle='rgba(255,235,190,.92)';ctx.fillRect(-18,-105,36,250);ctx.fillRect(-82,-52,164,34);ctx.restore();
-  // open Bible at the lower edge
-  ctx.save();ctx.translate(540,930);ctx.globalAlpha=.32;ctx.fillStyle='#f0dfc2';ctx.beginPath();ctx.moveTo(-5,-5);ctx.quadraticCurveTo(-170,-85,-345,-18);ctx.lineTo(-330,85);ctx.quadraticCurveTo(-145,35,-5,105);ctx.quadraticCurveTo(145,35,330,85);ctx.lineTo(345,-18);ctx.quadraticCurveTo(170,-85,5,-5);ctx.fill();ctx.strokeStyle='#6e4b35';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,-4);ctx.lineTo(0,95);ctx.stroke();ctx.restore();
-  // rays from the cross
-  ctx.save();ctx.globalAlpha=.14;ctx.strokeStyle='#fff0c9';ctx.lineWidth=8;for(let i=-4;i<=4;i++){ctx.beginPath();ctx.moveTo(820,240);ctx.lineTo(820+i*180,900);ctx.stroke()}ctx.restore();
+   // Every devotional scene has an unmistakable Christian focal point, but the setting changes.
+   const cross=(x,y,scale=1,alpha=.95)=>{ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.globalAlpha=alpha;ctx.shadowColor='#ffe0a0';ctx.shadowBlur=48;ctx.fillStyle='#fff0cf';ctx.fillRect(-15,-112,30,245);ctx.fillRect(-78,-48,156,29);ctx.restore()};
+   if(idx===0){ // rainy church window and cross
+     ctx.fillStyle='rgba(4,10,20,.38)';ctx.fillRect(115,100,850,800);ctx.strokeStyle='rgba(242,220,178,.58)';ctx.lineWidth=18;ctx.strokeRect(150,125,780,700);ctx.beginPath();ctx.moveTo(540,125);ctx.lineTo(540,825);ctx.moveTo(150,475);ctx.lineTo(930,475);ctx.stroke();
+     for(let i=0;i<45;i++){let x=165+r()*750,y=140+r()*660;ctx.strokeStyle='rgba(210,228,239,.16)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-12,y+55);ctx.stroke()}cross(540,430,1.25,.95);
+   }else if(idx===1){ // open Bible by a glowing window
+     ctx.fillStyle='rgba(5,12,22,.34)';ctx.fillRect(140,95,800,610);ctx.strokeStyle='rgba(245,224,187,.72)';ctx.lineWidth=20;ctx.strokeRect(185,130,710,535);ctx.beginPath();ctx.moveTo(540,130);ctx.lineTo(540,665);ctx.stroke();
+     ctx.save();ctx.translate(540,880);ctx.shadowColor='#f6d59b';ctx.shadowBlur=35;ctx.fillStyle='#e9d8b9';ctx.beginPath();ctx.moveTo(-8,-12);ctx.quadraticCurveTo(-190,-110,-365,-28);ctx.lineTo(-345,125);ctx.quadraticCurveTo(-150,60,-8,145);ctx.quadraticCurveTo(150,60,345,125);ctx.lineTo(365,-28);ctx.quadraticCurveTo(190,-110,8,-12);ctx.fill();ctx.strokeStyle='#795638';ctx.lineWidth=5;for(let y=5;y<85;y+=17){ctx.beginPath();ctx.moveTo(-285,y);ctx.lineTo(-35,y+18);ctx.moveTo(35,y+18);ctx.lineTo(285,y);ctx.stroke()}ctx.restore();
+   }else if(idx===2){ // cross above mountain lake at dawn
+     ctx.fillStyle='rgba(7,16,25,.34)';ctx.beginPath();ctx.moveTo(0,650);ctx.lineTo(230,360);ctx.lineTo(420,610);ctx.lineTo(660,300);ctx.lineTo(1080,680);ctx.lineTo(1080,1080);ctx.lineTo(0,1080);ctx.fill();
+     ctx.fillStyle='rgba(12,35,48,.58)';ctx.fillRect(0,680,1080,400);ctx.strokeStyle='rgba(240,213,165,.35)';ctx.lineWidth=5;for(let y=730;y<1010;y+=48){ctx.beginPath();ctx.moveTo(90,y);ctx.quadraticCurveTo(540,y-22,990,y);ctx.stroke()}cross(660,390,1.12,.98);
+   }else if(idx===3){ // candlelit prayer scene with cross on wall
+     ctx.fillStyle='rgba(8,8,14,.3)';ctx.fillRect(0,0,1080,1080);ctx.fillStyle='rgba(255,202,112,.22)';ctx.beginPath();ctx.ellipse(540,830,260,75,0,0,7);ctx.fill();ctx.fillStyle='#4d3325';ctx.fillRect(485,690,110,230);ctx.fillStyle='#f8d38d';ctx.beginPath();ctx.ellipse(540,675,48,90,0,0,7);ctx.fill();ctx.fillStyle='#fff2c9';ctx.beginPath();ctx.ellipse(540,625,19,50,0,0,7);ctx.fill();ctx.fillStyle='rgba(255,232,185,.85)';ctx.beginPath();ctx.ellipse(540,595,12,28,0,0,7);ctx.fill();cross(830,280,.8,.8);
+   }else if(idx===4){ // church silhouette and cross in a field
+     ctx.fillStyle='rgba(5,14,18,.52)';ctx.beginPath();ctx.moveTo(0,760);ctx.quadraticCurveTo(250,630,500,760);ctx.quadraticCurveTo(780,650,1080,740);ctx.lineTo(1080,1080);ctx.lineTo(0,1080);ctx.fill();ctx.fillRect(395,470,290,330);ctx.beginPath();ctx.moveTo(360,475);ctx.lineTo(540,300);ctx.lineTo(720,475);ctx.fill();cross(540,310,.72,.95);
+   }else if(idx===5){ // cross under a starry sky
+     for(let i=0;i<130;i++){ctx.fillStyle=`rgba(255,244,214,${.18+r()*.65})`;ctx.beginPath();ctx.arc(r()*W,r()*650,1+r()*3,0,7);ctx.fill()}cross(540,390,1.55,1);
+     ctx.fillStyle='rgba(5,12,22,.5)';ctx.fillRect(0,820,W,260);
+   }else{ // stained glass sanctuary
+     ctx.fillStyle='rgba(7,10,22,.4)';ctx.fillRect(115,90,850,830);ctx.strokeStyle='rgba(246,223,184,.72)';ctx.lineWidth=20;ctx.beginPath();ctx.moveTo(180,900);ctx.lineTo(180,390);ctx.quadraticCurveTo(180,115,540,105);ctx.quadraticCurveTo(900,115,900,390);ctx.lineTo(900,900);ctx.stroke();
+     const colors=['#b77c55','#557b94','#c5a15e','#785b85'];for(let i=0;i<8;i++){ctx.fillStyle=colors[i%4];ctx.globalAlpha=.24;ctx.fillRect(205+i*82,300+(i%2)*40,65,450)}ctx.globalAlpha=1;cross(540,420,1.1,.95);
+   }
+   // Soft beams and a subtle lower vignette unify the sacred collection.
+   ctx.save();ctx.globalAlpha=.13;ctx.strokeStyle='#fff0c9';ctx.lineWidth=9;for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(glowX,glowY);ctx.lineTo(glowX+i*210,1080);ctx.stroke()}ctx.restore();
  }else{
-  // Life imagery: a distant horizon, winding road and human silhouette.
-  const horizon=690;
-  ctx.fillStyle='rgba(9,17,25,.28)';ctx.beginPath();ctx.moveTo(0,horizon+40);ctx.quadraticCurveTo(240,570,480,horizon+15);ctx.quadraticCurveTo(760,560,1080,horizon+30);ctx.lineTo(1080,1080);ctx.lineTo(0,1080);ctx.fill();
-  ctx.fillStyle='rgba(6,12,18,.42)';ctx.beginPath();ctx.moveTo(410,1080);ctx.quadraticCurveTo(520,830,520,700);ctx.lineTo(560,700);ctx.quadraticCurveTo(610,870,760,1080);ctx.fill();
-  // lone person looking toward the light, symbolic rather than literal portrait
-  ctx.save();ctx.fillStyle='rgba(8,13,20,.72)';ctx.beginPath();ctx.arc(760,620,29,0,7);ctx.fill();ctx.beginPath();ctx.moveTo(725,660);ctx.quadraticCurveTo(760,640,795,660);ctx.lineTo(830,850);ctx.lineTo(695,850);ctx.closePath();ctx.fill();ctx.restore();
-  // distant sun / opening in the clouds
-  let sun=ctx.createRadialGradient(760,590,5,760,590,260);sun.addColorStop(0,'rgba(255,224,176,.75)');sun.addColorStop(1,'rgba(255,224,176,0)');ctx.fillStyle=sun;ctx.fillRect(470,300,580,580);
-  // subtle rain / drifting light particles depending on seed
-  if(seed%3===0){ctx.strokeStyle='rgba(225,235,245,.16)';ctx.lineWidth=2;for(let i=0;i<75;i++){let x=r()*W,y=r()*H;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-15,y+70);ctx.stroke()}}
+   if(idx===0){ // rain-streaked window, solitary silhouette
+     ctx.fillStyle='rgba(5,12,20,.48)';ctx.fillRect(110,95,860,800);ctx.strokeStyle='rgba(230,225,214,.38)';ctx.lineWidth=20;ctx.strokeRect(150,130,780,720);ctx.beginPath();ctx.moveTo(540,130);ctx.lineTo(540,850);ctx.moveTo(150,480);ctx.lineTo(930,480);ctx.stroke();for(let i=0;i<75;i++){let x=160+r()*760,y=140+r()*680;ctx.strokeStyle='rgba(210,225,238,.22)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-15,y+65);ctx.stroke()}ctx.fillStyle='rgba(5,10,16,.82)';ctx.beginPath();ctx.arc(730,630,34,0,7);ctx.fill();ctx.fillRect(690,675,82,210);
+   }else if(idx===1){ // empty chair in a quiet room
+     ctx.fillStyle='rgba(8,13,18,.4)';ctx.fillRect(125,110,830,760);ctx.fillStyle='rgba(255,220,174,.25)';ctx.fillRect(190,155,700,480);ctx.strokeStyle='rgba(245,224,195,.35)';ctx.lineWidth=16;ctx.strokeRect(190,155,700,480);ctx.fillStyle='rgba(8,12,17,.72)';ctx.fillRect(390,610,300,230);ctx.fillRect(360,570,360,60);ctx.fillRect(405,825,38,180);ctx.fillRect(635,825,38,180);ctx.fillStyle='rgba(255,228,190,.16)';ctx.fillRect(480,660,120,160);
+   }else if(idx===2){ // ocean horizon and lone figure
+     ctx.fillStyle='rgba(7,19,29,.42)';ctx.fillRect(0,570,W,510);ctx.strokeStyle='rgba(255,230,196,.35)';ctx.lineWidth=5;for(let y=660;y<1030;y+=45){ctx.beginPath();ctx.moveTo(0,y);ctx.quadraticCurveTo(540,y-28,1080,y);ctx.stroke()}ctx.fillStyle='rgba(7,12,18,.8)';ctx.beginPath();ctx.arc(760,610,28,0,7);ctx.fill();ctx.beginPath();ctx.moveTo(730,650);ctx.lineTo(710,890);ctx.lineTo(810,890);ctx.lineTo(790,650);ctx.fill();
+   }else if(idx===3){ // warm lamp and journal on a table
+     ctx.fillStyle='rgba(9,11,16,.4)';ctx.fillRect(0,0,1080,1080);ctx.fillStyle='rgba(255,204,133,.25)';ctx.beginPath();ctx.ellipse(770,430,220,270,0,0,7);ctx.fill();ctx.fillStyle='#392a25';ctx.fillRect(0,780,1080,300);ctx.save();ctx.translate(540,820);ctx.rotate(-.08);ctx.fillStyle='#c5a987';ctx.fillRect(-230,-85,460,180);ctx.strokeStyle='#6d5440';ctx.lineWidth=4;for(let y=-45;y<60;y+=28){ctx.beginPath();ctx.moveTo(-175,y);ctx.lineTo(175,y);ctx.stroke()}ctx.restore();ctx.fillStyle='rgba(255,225,180,.6)';ctx.beginPath();ctx.moveTo(790,120);ctx.lineTo(650,560);ctx.lineTo(930,560);ctx.fill();
+   }else if(idx===4){ // winding road through hills at sunrise
+     ctx.fillStyle='rgba(7,16,22,.4)';ctx.beginPath();ctx.moveTo(0,680);ctx.quadraticCurveTo(260,500,500,700);ctx.quadraticCurveTo(780,480,1080,660);ctx.lineTo(1080,1080);ctx.lineTo(0,1080);ctx.fill();ctx.fillStyle='rgba(8,13,18,.55)';ctx.beginPath();ctx.moveTo(390,1080);ctx.bezierCurveTo(500,870,690,820,600,690);ctx.bezierCurveTo(550,610,660,570,760,540);ctx.lineTo(840,540);ctx.bezierCurveTo(720,680,780,770,700,880);ctx.lineTo(650,1080);ctx.fill();ctx.fillStyle='rgba(8,13,18,.8)';ctx.beginPath();ctx.arc(740,500,24,0,7);ctx.fill();ctx.fillRect(720,530,42,130);
+   }else if(idx===5){ // night sky and a person beneath stars
+     for(let i=0;i<160;i++){ctx.fillStyle=`rgba(255,244,220,${.2+r()*.65})`;ctx.beginPath();ctx.arc(r()*W,r()*720,1+r()*2.8,0,7);ctx.fill()}ctx.fillStyle='rgba(6,12,20,.58)';ctx.fillRect(0,820,W,260);ctx.fillStyle='rgba(6,10,17,.85)';ctx.beginPath();ctx.arc(540,690,31,0,7);ctx.fill();ctx.fillRect(505,730,70,250);
+   }else{ // two people sharing a quiet moment at sunset
+     ctx.fillStyle='rgba(7,13,20,.42)';ctx.fillRect(0,690,W,390);for(const x of [430,640]){ctx.fillStyle='rgba(7,11,17,.82)';ctx.beginPath();ctx.arc(x,610,33,0,7);ctx.fill();ctx.beginPath();ctx.moveTo(x-42,655);ctx.quadraticCurveTo(x,630,x+42,655);ctx.lineTo(x+65,880);ctx.lineTo(x-65,880);ctx.fill()}ctx.strokeStyle='rgba(255,225,188,.28)';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,790);ctx.quadraticCurveTo(540,740,1080,790);ctx.stroke();
+   }
  }
- // cinematic vignette and typography-safe center gradient
- let v=ctx.createRadialGradient(540,510,180,540,540,790);v.addColorStop(0,'rgba(0,0,0,.08)');v.addColorStop(.7,'rgba(0,0,0,.25)');v.addColorStop(1,'rgba(0,0,0,.68)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
- let veil=ctx.createLinearGradient(0,0,0,H);veil.addColorStop(0,'rgba(0,0,0,.12)');veil.addColorStop(.5,'rgba(0,0,0,.35)');veil.addColorStop(1,'rgba(0,0,0,.58)');ctx.fillStyle=veil;ctx.fillRect(0,0,W,H);
- ctx.strokeStyle=faith?'rgba(244,218,167,.58)':'rgba(239,224,205,.42)';ctx.lineWidth=3;ctx.strokeRect(34,34,1012,1012);
- return faith?'Sacred light, stained glass and cross':'A solitary journey toward the light';
+ // A restrained film grain, vignette and framed quote-safe area.
+ for(let i=0;i<110;i++){let x=r()*W,y=r()*H;ctx.fillStyle=`rgba(255,245,225,${r()*.055})`;ctx.fillRect(x,y,2,2)}
+ let v=ctx.createRadialGradient(540,510,180,540,540,790);v.addColorStop(0,'rgba(0,0,0,.04)');v.addColorStop(.7,'rgba(0,0,0,.24)');v.addColorStop(1,'rgba(0,0,0,.66)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+ let veil=ctx.createLinearGradient(0,0,0,H);veil.addColorStop(0,'rgba(0,0,0,.08)');veil.addColorStop(.5,'rgba(0,0,0,.30)');veil.addColorStop(1,'rgba(0,0,0,.52)');ctx.fillStyle=veil;ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle=faith?'rgba(244,218,167,.62)':'rgba(239,224,205,.45)';ctx.lineWidth=3;ctx.strokeRect(34,34,1012,1012);
+ return faith?['Rainy chapel window and cross','Open Bible in window light','Cross above a mountain lake','Candlelit prayer','Church at golden hour','Cross beneath the stars','Stained-glass sanctuary'][idx]:['Rainy window reflection','An empty chair in evening light','A lone figure by the ocean','Journal in warm lamplight','A winding road at sunrise','A quiet night beneath the stars','Two people sharing a moment'][idx];
 }
 function drawQuote(ctx,quote,page,seed){
  const style=$('typeStyle').value, cross=$('cross').value, showCross=cross==='yes'||(cross==='auto'&&page==='faith');
@@ -202,7 +220,7 @@ function showToast(msg){const t=$('toast');t.textContent=msg;t.style.display='bl
 function setProgress(done,total){$('progressBar').style.width=(total?done/total*100:0)+'%';$('statusText').textContent=`Creating ${done} of ${total}…`}
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function makePost(){
- const item=chooseQuote(activePage,$('topic').value),seed=(Date.now()+Math.floor(Math.random()*1e9))>>>0;
+ const item=chooseQuote(activePage,$('topic').value),seed=(Date.now()+Math.floor(Math.random()*0x7fffffff)+posts.length*7919)>>>0;
  const post={id:crypto.randomUUID?crypto.randomUUID():String(seed),page:activePage,quote:item.quote,caption:item.caption,seed,scene:'',mode:'Built-in design',imageData:null};
  const mode=$('imageMode').value;
  if(mode!=='fallback'&&!aiUnavailable){try{post.imageData=await tryGemini(post);post.mode='AI photo + typography'}catch(e){aiUnavailable=true;post.mode='Built-in fallback';}}
