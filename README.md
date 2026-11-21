@@ -1,1 +1,1 @@
-# dual-page-post-studio
+# index.html
